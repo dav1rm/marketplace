@@ -32,7 +32,11 @@ class PurchaseController {
   }
 
   async update (req, res) {
-    const purchase = await Purchase.findById(req.params.id)
+    const purchase = await Purchase.findById(req.params.id).populate('ad')
+
+    if (purchase.ad.purchasedBy) {
+      return res.status(400).json({ error: 'Ad already sold' })
+    }
 
     const ad = await Ad.findByIdAndUpdate(
       purchase.ad,
