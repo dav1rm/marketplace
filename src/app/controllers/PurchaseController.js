@@ -11,7 +11,9 @@ class PurchaseController {
     const purchaseAd = await Ad.findById(ad).populate('author')
 
     if (purchaseAd.purchasedBy) {
-      return res.status(400).json({ error: 'Ad already sold' })
+      return res
+        .status(400)
+        .json({ error: 'This ad had already been purchased' })
     }
 
     const user = await User.findById(req.userId)
@@ -32,19 +34,24 @@ class PurchaseController {
   }
 
   async update (req, res) {
-    const purchase = await Purchase.findById(req.params.id).populate('ad')
+    const { ad } = await Purchase.findById(req.params.id).populate({
+      path: 'ad',
+      populate: { path: 'author' }
+    })
 
-    if (purchase.ad.purchasedBy) {
-      return res.status(400).json({ error: 'Ad already sold' })
+    if (!ad.author._id.equals(req.userId)) {
+      return res.status(401).json({ error: "You're not the ad author" })
     }
 
-    const ad = await Ad.findByIdAndUpdate(
-      purchase.ad,
-      { purchasedBy: req.params.id },
-      {
-        new: true
-      }
-    )
+    if (ad.purchasedBy) {
+      return res
+        .status(400)
+        .json({ error: 'This ad had already been purchased' })
+    }
+
+    ad.purchasedBy = req.params.id
+
+    ad.save()
 
     return res.json(ad)
   }

@@ -2,7 +2,9 @@ const Ad = require('../models/Ad')
 
 class AdController {
   async index (req, res) {
-    const filters = {}
+    const filters = {
+      purchasedBy: null
+    }
 
     if (req.query.price_min || req.query.price_max) {
       filters.price = {}
@@ -19,8 +21,6 @@ class AdController {
     if (req.query.title) {
       filters.title = new RegExp(req.query.title, 'i')
     }
-
-    filters.purchasedBy = null
 
     const ads = await Ad.paginate(filters, {
       page: req.query.page || 1,
